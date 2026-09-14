@@ -61,11 +61,14 @@ pub fn interactive_mode() -> Result<()> {
             _ => unreachable!(),
         };
 
-        // Esc inside an action cancels back to the menu; real errors still exit.
+        // Esc inside an action cancels back to the menu. A failed action is
+        // reported and also returns to the menu: an unreachable RPC endpoint or
+        // a rejected input is a reason to retry or pick another action, not to
+        // lose the session.
         match result {
             Ok(()) => {}
             Err(e) if is_prompt_cancellation(&e) => Output::info("Cancelled."),
-            Err(e) => return Err(e),
+            Err(e) => Output::error(&format!("{e:#}")),
         }
 
         println!("\n");
